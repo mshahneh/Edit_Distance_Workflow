@@ -21,7 +21,7 @@ process CalcProcess {
     """
     mkdir res
     python $baseDir/pairs.py \
-    '/home/user/Substructure_Assignment/my_implementation/SmallMol_Mod_Site_Localization_Analysis/Analysis/Wout/DataForReza/ALL_GNPS_cleaned_unique.csv' \
+    '${baseDir}/DataForReza/ALL_GNPS_cleaned_unique.csv' \
         'res/res_${batch_index}.csv' --batch_x ${params.batch_x} --batch_y ${params.batch_y} --batch_index ${batch_index-1}
     """
 }
