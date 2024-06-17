@@ -1,11 +1,5 @@
-from collections import defaultdict
-from pathlib import Path
-from copy import deepcopy
-import random
 
-from ipywidgets import interact, fixed, widgets
 import pandas as pd
-import matplotlib.pyplot as plt
 from rdkit import Chem, Geometry
 from rdkit.Chem import AllChem
 from rdkit.Chem import Draw
