@@ -118,7 +118,30 @@ if __name__ == '__main__':
     parser.add_argument('--batch_x', type=int, help='Number of rows in the batch.', default=1)
     parser.add_argument('--batch_y', type=int, help='Number of columns in the batch.', default=1)
     parser.add_argument('--batch_index', type=int, help='Index of the batch to process.', default=0)
+    parser.add_argument('--cached_dir', type=str, help='Path to the directory containing cached data.', default=None)
     args = parser.parse_args()
+
+    if not os.path.exists(os.path.dirname(args.out_dir)):
+        os.makedirs(os.path.dirname(args.out_dir))
+    
+    if args.cached_dir is not None:
+        print("Checking cache...")
+        file_name = os.path.basename(args.out_dir)
+        print("file_name", file_name)
+        cached_file = os.path.join(args.cached_dir, file_name)
+        print(cached_file)
+        if os.path.exists(cached_file):
+            print("Cache found!.")
+            # rewrite the file in the output directory
+            print(args.out_dir, "is being written.")
+            with open(cached_file, 'r') as f:
+                with open(args.out_dir, 'w') as f2:
+                    f2.write(f.read())
+            exit(0)
+    else:
+        print("No cache directory provided.")
+    
+
     data = pd.read_csv(args.data)
     batch_x = args.batch_x
     batch_y = args.batch_y
