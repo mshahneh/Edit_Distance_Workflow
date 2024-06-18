@@ -1,14 +1,14 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
-params.batch_x = 600
-params.batch_y = 300
+params.batch_x = 200
+params.batch_y = 100
 
 
 process CalcProcess {
     errorStrategy 'ignore'
-    // conda "${baseDir}/environment.yml"
-    conda '/home/user/mambaforge/envs/mod-site'
-    maxForks 93
+    conda "${baseDir}/environment.yml"
+    // conda '/home/user/mambaforge/envs/mod-site'
+    // maxForks 93
     publishDir "/home/user/LabData/Reza/data/Wout/nf_output/", mode: 'copy'
     // time '15m'
 
