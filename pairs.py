@@ -46,7 +46,7 @@ def main(data, out_dir, data_y):
             for j, row2 in data_y.iterrows():
                 try:
                     distance, tanimoto, is_sub = solve_pair(moli, mols[j])
-                    f.write(f"{row1['Smiles']},{row2['Smiles']},{distance},{tanimoto},{is_sub},{row1['INCHI']},{row2['INCHI']}\n")
+                    f.write(f"{row1['Smiles']},{row2['Smiles']},{distance},{tanimoto},{is_sub},\"{row1['INCHI']}\",\"{row2['INCHI']}\"\n")
                     # print("here")
                 except Exception as e:
                     # print(e)

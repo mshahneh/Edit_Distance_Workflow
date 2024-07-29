@@ -1,2 +1,4 @@
-*nextflow*
-*nextflow.log*
+*log*
+work/
+.nextflow/
+nf_output/
