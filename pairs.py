@@ -23,27 +23,44 @@ def solve_pair(smiles1, smiles2):
         mol2 = Chem.MolFromSmiles(smiles2)
     else:
         mol2 = smiles2
+    
+    if mol1.GetNumAtoms() > 60 or mol2.GetNumAtoms() > 60:
+        raise ValueError("The molecules are too large.")
+    
     fpgen = AllChem.GetRDKitFPGenerator(maxPath=3,fpSize=512)
     fps = [fpgen.GetFingerprint(x) for x in [mol1, mol2]]
     tanimoto = DataStructs.TanimotoSimilarity(fps[0],fps[1])
     if tanimoto < 0.2:
         raise ValueError("The Tanimoto similarity is too low.")
     
-    distance = mu.get_edit_distance(mol1, mol2)
+    mcs1 = rdFMCS.FindMCS([mol1, mol2])
+    mcs_mol = Chem.MolFromSmarts(mcs1.smartsString)
+    if mcs_mol.GetNumAtoms() < mol1.GetNumAtoms()//2 and mcs_mol.GetNumAtoms() < mol2.GetNumAtoms()//2:
+        raise ValueError("The MCS is too small.")
+    if mcs_mol.GetNumAtoms() <= 2:
+        raise ValueError("The MCS is too small.")
+    
+    dist1 = mu.get_modification_edges(mol1, mcs_mol)
+    dist2 = mu.get_modification_edges(mol2, mcs_mol)
+    distance = len(dist1) + len(dist2)
 
-    is_sub = mol1.HasSubstructMatch(mol2) or mol2.HasSubstructMatch(mol1)
+    is_sub = ((len(dist1) == 0) or (len(dist2) == 0))
     return distance, tanimoto, is_sub
 
-def main(data, out_dir, data_y):
-    mols = [Chem.MolFromSmiles(data_y.iloc[i]['Smiles']) for i in range(len(data_y))]
+def main(data_x, out_dir, data_y):
+    mols = {i: Chem.MolFromSmiles(row['Smiles']) for i, row in data_y.iterrows()}
 
+    count = 0
     with open(out_dir, 'w') as f:
         f.write('smiles1,smiles2,distance,tanimoto,is_sub,inchi1,inchi2\n')
-        for i, row1 in tqdm(data.iterrows(), total=len(data), ascii=True):
+        for i, row1 in tqdm(data_x.iterrows(), total=len(data_x), ascii=True):
             moli = Chem.MolFromSmiles(row1['Smiles'])
             if moli.GetNumAtoms() > 60:
                 continue
             for j, row2 in data_y.iterrows():
+                # only for upper triangular matrix
+                if i > j:
+                    continue
                 try:
                     distance, tanimoto, is_sub = solve_pair(moli, mols[j])
                     f.write(f"{row1['Smiles']},{row2['Smiles']},{distance},{tanimoto},{is_sub},\"{row1['INCHI']}\",\"{row2['INCHI']}\"\n")
@@ -52,12 +69,13 @@ def main(data, out_dir, data_y):
                     # print(e)
                     continue
         
+        count += 1
         # if 10 percent of progress is made, save the file
-        if i % (len(data) // 10) == 0:
+        if count % (len(data_x) // 10) == 0:
             f.flush()
             os.fsync(f.fileno())
 
-def get_data(data, index, batch_count):
+def get_data_index(data, index, batch_count):
     batch_size = len(data) // batch_count
     if index < len(data) % batch_count:
         batch_size += 1
@@ -70,10 +88,7 @@ def get_data(data, index, batch_count):
     if end > len(data):
         end = len(data)
     
-    res = data.iloc[start:end]
-    # reset index
-    res = res.reset_index(drop=True)
-    return res
+    return start, end
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Calculate edit distance and Tanimoto similarity between pairs of molecules.')
@@ -85,6 +100,10 @@ if __name__ == '__main__':
     parser.add_argument('--cached_dir', type=str, help='Path to the directory containing cached data.', default=None)
     args = parser.parse_args()
 
+    # if output dir is relative, make it absolute
+    if not os.path.isabs(args.out_dir):
+        args.out_dir = os.path.join(os.getcwd(), args.out_dir)
+    
     if not os.path.exists(os.path.dirname(args.out_dir)):
         os.makedirs(os.path.dirname(args.out_dir))
     
@@ -115,16 +134,16 @@ if __name__ == '__main__':
     index_x = batch_index // batch_y
     index_y = batch_index % batch_y
 
-    # only do for lower triangle
-    if index_x < index_y:
-        exit(0)
+    data_y_start, data_y_end = get_data_index(data, index_y, batch_y)
+    data_start, data_end = get_data_index(data, index_x, batch_x)
 
-    data_y = get_data(data, index_y, batch_y)
-    data = get_data(data, index_x, batch_x)
+    # only do for upper triangular matrix
+    data_y_start = max(data_y_start, data_start)
 
-    # print(len(data_y), len(data))
-    # print(data_y.index)
+    data_y = data.iloc[data_y_start:data_y_end]
+    data_x = data.iloc[data_start:data_end]
+    del data
 
-    main(data, out_dir, data_y)
+    main(data_x, out_dir, data_y)
 
 

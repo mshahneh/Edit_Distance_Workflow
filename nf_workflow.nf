@@ -16,7 +16,7 @@ process CalcProcess {
     val batch_index
 
     output:
-    file "res/*"
+    file "res/*" optional true
 
     script:
     """
