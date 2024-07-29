@@ -11,43 +11,7 @@ from tqdm import tqdm
 from rdkit import DataStructs
 from rdkit.Chem.Fingerprints import FingerprintMols
 import os
-
-def get_number_of_modification_edges(mol, substructure):
-    if not mol.HasSubstructMatch(substructure):
-        raise ValueError("The substructure is not a substructure of the molecule.")
-    
-    matches = mol.GetSubstructMatch(substructure)
-    intersect = set(matches)
-    modification_edges = []
-    for bond in mol.GetBonds():
-        if bond.GetBeginAtomIdx() in intersect and bond.GetEndAtomIdx() in intersect:
-            continue
-        if bond.GetBeginAtomIdx() in intersect or bond.GetEndAtomIdx() in intersect:
-            modification_edges.append(bond.GetIdx())
-        
-    return modification_edges
-
-def get_edit_distance(mol1, mol2):
-    """
-        Calculates the edit distance between mol1 and mol2.
-        Input:
-            mol1: first molecule
-            mol2: second molecule
-        Output:
-            edit_distance: edit distance between mol1 and mol2
-    """
-    if mol1.GetNumAtoms() > 60 or mol2.GetNumAtoms() > 60:
-        raise ValueError("The molecules are too large.")
-    mcs1 = rdFMCS.FindMCS([mol1, mol2])
-    mcs_mol = Chem.MolFromSmarts(mcs1.smartsString)
-    if mcs_mol.GetNumAtoms() < mol1.GetNumAtoms()//2 and mcs_mol.GetNumAtoms() < mol2.GetNumAtoms()//2:
-        raise ValueError("The MCS is too small.")
-    if mcs_mol.GetNumAtoms() < 2:
-        raise ValueError("The MCS is too small.")
-    
-    dist1 = get_number_of_modification_edges(mol1, mcs_mol)
-    dist2 = get_number_of_modification_edges(mol2, mcs_mol)
-    return len(dist1) + len(dist2)
+from modifinder.utilities import mol_utils as mu
 
 def solve_pair(smiles1, smiles2):
     if type(smiles1) == str:
@@ -65,7 +29,7 @@ def solve_pair(smiles1, smiles2):
     if tanimoto < 0.2:
         raise ValueError("The Tanimoto similarity is too low.")
     
-    distance = get_edit_distance(mol1, mol2)
+    distance = mu.get_edit_distance(mol1, mol2)
 
     is_sub = mol1.HasSubstructMatch(mol2) or mol2.HasSubstructMatch(mol1)
     return distance, tanimoto, is_sub
@@ -150,6 +114,10 @@ if __name__ == '__main__':
 
     index_x = batch_index // batch_y
     index_y = batch_index % batch_y
+
+    # only do for lower triangle
+    if index_x < index_y:
+        exit(0)
 
     data_y = get_data(data, index_y, batch_y)
     data = get_data(data, index_x, batch_x)
