@@ -12,6 +12,7 @@ from rdkit import DataStructs
 from rdkit.Chem.Fingerprints import FingerprintMols
 import os
 from modifinder.utilities import mol_utils as mu
+from myopic_mces import MCES
 
 def solve_pair(smiles1, smiles2):
     if type(smiles1) == str:
@@ -24,7 +25,7 @@ def solve_pair(smiles1, smiles2):
     else:
         mol2 = smiles2
     
-    if mol1.GetNumAtoms() > 60 or mol2.GetNumAtoms() > 60:
+    if mol1.GetNumAtoms() > 50 or mol2.GetNumAtoms() > 50:
         raise ValueError("The molecules are too large.")
     
     fpgen = AllChem.GetRDKitFPGenerator(maxPath=3,fpSize=512)
@@ -40,23 +41,38 @@ def solve_pair(smiles1, smiles2):
     if mcs_mol.GetNumAtoms() <= 2:
         raise ValueError("The MCS is too small.")
     
-    dist1 = mu.get_modification_edges(mol1, mcs_mol)
-    dist2 = mu.get_modification_edges(mol2, mcs_mol)
-    distance = len(dist1) + len(dist2)
+    dist1, dist2 = mu.get_edit_distance_detailed(mol1, mol2)
 
+    if type(smiles1) != str:
+        smiles1 = Chem.MolToSmiles(mol1)
+    if type(smiles2) != str:
+        smiles2 = Chem.MolToSmiles(mol2)
+    mces_value = MCES(smiles1, smiles2)
+    distance = len(dist1) + len(dist2)
     is_sub = ((len(dist1) == 0) or (len(dist2) == 0))
-    return distance, tanimoto, is_sub
+
+    res = dict()
+    res['distance'] = distance
+    res['tanimoto'] = tanimoto
+    res['is_sub'] = is_sub
+    res['mces'] = round(mces_value[1], 2)
+    # res['added'] = len(dist1)
+    # res['removed'] = len(dist2)
+    return distance, tanimoto, is_sub, round(mces_value[1], 2)
 
 def main(data_x, out_dir, data_y):
     mols = {i: Chem.MolFromSmiles(row['Smiles']) for i, row in data_y.iterrows()}
 
-    count = 0
+    # count = 0
+    # save_intervals = [i*len(data_x)//10 for i in range(1, 10)]
     with open(out_dir, 'w') as f:
         f.write('smiles1,smiles2,distance,tanimoto,is_sub,inchi1,inchi2\n')
         for i, row1 in tqdm(data_x.iterrows(), total=len(data_x), ascii=True):
+        # for i, row1 in data_x.iterrows():
             moli = Chem.MolFromSmiles(row1['Smiles'])
-            if moli.GetNumAtoms() > 60:
+            if moli.GetNumAtoms() > 50:
                 continue
+            # for j, row2 in tqdm(data_y.iterrows(), total=len(data_y), ascii=True):
             for j, row2 in data_y.iterrows():
                 # only for upper triangular matrix
                 if i > j:
@@ -69,11 +85,11 @@ def main(data_x, out_dir, data_y):
                     # print(e)
                     continue
         
-        count += 1
-        # if 10 percent of progress is made, save the file
-        if count % (len(data_x) // 10) == 0:
-            f.flush()
-            os.fsync(f.fileno())
+        # count += 1
+        # # if 10 percent of progress is made, save the file
+        # if count in save_intervals:
+        #     f.flush()
+        #     os.fsync(f.fileno())
 
 def get_data_index(data, index, batch_count):
     batch_size = len(data) // batch_count
