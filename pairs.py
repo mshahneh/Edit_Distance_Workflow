@@ -43,11 +43,11 @@ def solve_pair(smiles1, smiles2):
     
     dist1, dist2 = mu.get_edit_distance_detailed(mol1, mol2)
 
-    if type(smiles1) != str:
-        smiles1 = Chem.MolToSmiles(mol1)
-    if type(smiles2) != str:
-        smiles2 = Chem.MolToSmiles(mol2)
-    mces_value = MCES(smiles1, smiles2)
+    # if type(smiles1) != str:
+    #     smiles1 = Chem.MolToSmiles(mol1)
+    # if type(smiles2) != str:
+    #     smiles2 = Chem.MolToSmiles(mol2)
+    # mces_value = MCES(smiles1, smiles2)
     distance = len(dist1) + len(dist2)
     is_sub = ((len(dist1) == 0) or (len(dist2) == 0))
 
@@ -55,17 +55,17 @@ def solve_pair(smiles1, smiles2):
     res['distance'] = distance
     res['tanimoto'] = tanimoto
     res['is_sub'] = is_sub
-    res['mces'] = round(mces_value[1], 2)
+    # res['mces'] = round(mces_value[1], 2)
     # res['added'] = len(dist1)
     # res['removed'] = len(dist2)
     return res
 
-def main(data_x, out_dir, data_y):
+def main(data_x, out_dir, data_y, verbose=True):
     mols = {i: Chem.MolFromSmiles(row['Smiles']) for i, row in data_y.iterrows()}
 
     with open(out_dir, 'w') as f:
-        f.write('distance,tanimoto,is_sub,mces,inchi1,inchi2\n')
-        for i, row1 in tqdm(data_x.iterrows(), total=len(data_x), ascii=True):
+        f.write('distance,tanimoto,is_sub,inchi1,inchi2\n')
+        for i, row1 in tqdm(data_x.iterrows(), total=len(data_x), ascii=True, disable=not verbose):
             moli = Chem.MolFromSmiles(row1['Smiles'])
             if moli.GetNumAtoms() > 50:
                 continue
@@ -80,8 +80,8 @@ def main(data_x, out_dir, data_y):
                     distance = res['distance']
                     tanimoto = res['tanimoto']
                     is_sub = res['is_sub']
-                    mces = res['mces']
-                    f.write(f"{distance},{tanimoto},{is_sub},{mces},\"{row1['INCHI']}\",\"{row2['INCHI']}\"\n")
+                    # mces = res['mces']
+                    f.write(f"{distance},{tanimoto},{is_sub},\"{row1['INCHI']}\",\"{row2['INCHI']}\"\n")
                     # print("here")
                 except Exception as e:
                     # print(e)
@@ -116,6 +116,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_y', type=int, help='Number of columns in the batch.', default=1)
     parser.add_argument('--batch_index', type=int, help='Index of the batch to process.', default=0)
     parser.add_argument('--cached_dir', type=str, help='Path to the directory containing cached data.', default=None)
+    parser.add_argument('--verbose', action='store_true', help='Print verbose output.')
     args = parser.parse_args()
 
     # if output dir is relative, make it absolute
@@ -132,7 +133,8 @@ if __name__ == '__main__':
         cached_file = os.path.join(args.cached_dir, file_name)
         # print(cached_file)
         if os.path.exists(cached_file):
-            # print("Cache found!.")
+            if args.verbose:
+                print("Cache found!.")
             # rewrite the file in the output directory
             # print(args.out_dir, "is being written.")
             with open(cached_file, 'r') as f:
@@ -140,7 +142,8 @@ if __name__ == '__main__':
                     f2.write(f.read())
             exit(0)
     else:
-        print("No cache directory provided.")
+        if args.verbose:    
+            print("No cache directory provided.")
     
 
     data = pd.read_csv(args.data)
@@ -162,6 +165,6 @@ if __name__ == '__main__':
     data_x = data.iloc[data_start:data_end]
     del data
 
-    main(data_x, out_dir, data_y)
+    main(data_x, out_dir, data_y, args.verbose)
 
 

@@ -23,9 +23,15 @@ process CalcProcess {
     mkdir res
     python $baseDir/pairs.py \
     '${baseDir}/DataForReza/ALL_GNPS_cleaned_unique.csv' \
-        'res/res_${batch_index}.csv' --batch_x ${params.batch_x} --batch_y ${params.batch_y} --batch_index ${batch_index-1} \
-        --cached_dir  "/home/user/LabData/Reza/data/Wout/nf_output/res/"
+        'res/res_${batch_index}.csv' --batch_x ${params.batch_x} --batch_y ${params.batch_y} --batch_index ${batch_index-1} 
     """
+    // """
+    // mkdir res
+    // python $baseDir/pairs.py \
+    // '${baseDir}/DataForReza/ALL_GNPS_cleaned_unique.csv' \
+    //     'res/res_${batch_index}.csv' --batch_x ${params.batch_x} --batch_y ${params.batch_y} --batch_index ${batch_index-1} \
+    //     --cached_dir  "/home/user/LabData/Reza/data/Wout/nf_output/res/"
+    // """
 }
 
 
