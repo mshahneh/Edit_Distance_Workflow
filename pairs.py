@@ -58,28 +58,30 @@ def solve_pair(smiles1, smiles2):
     res['mces'] = round(mces_value[1], 2)
     # res['added'] = len(dist1)
     # res['removed'] = len(dist2)
-    return distance, tanimoto, is_sub, round(mces_value[1], 2)
+    return res
 
 def main(data_x, out_dir, data_y):
     mols = {i: Chem.MolFromSmiles(row['Smiles']) for i, row in data_y.iterrows()}
 
-    # count = 0
-    # save_intervals = [i*len(data_x)//10 for i in range(1, 10)]
     with open(out_dir, 'w') as f:
-        f.write('smiles1,smiles2,distance,tanimoto,is_sub,inchi1,inchi2\n')
+        f.write('distance,tanimoto,is_sub,mces,inchi1,inchi2\n')
         for i, row1 in tqdm(data_x.iterrows(), total=len(data_x), ascii=True):
-        # for i, row1 in data_x.iterrows():
             moli = Chem.MolFromSmiles(row1['Smiles'])
             if moli.GetNumAtoms() > 50:
                 continue
-            # for j, row2 in tqdm(data_y.iterrows(), total=len(data_y), ascii=True):
             for j, row2 in data_y.iterrows():
-                # only for upper triangular matrix
+                
+                # warning!!! this is to make sure the process is only called for the upper triangular matrix, this assumes
+                # that the data is not reindexed and the data_x and data_y are just slices of the original dataframe
                 if i > j:
                     continue
                 try:
-                    distance, tanimoto, is_sub = solve_pair(moli, mols[j])
-                    f.write(f"{row1['Smiles']},{row2['Smiles']},{distance},{tanimoto},{is_sub},\"{row1['INCHI']}\",\"{row2['INCHI']}\"\n")
+                    res = solve_pair(moli, mols[j])
+                    distance = res['distance']
+                    tanimoto = res['tanimoto']
+                    is_sub = res['is_sub']
+                    mces = res['mces']
+                    f.write(f"{distance},{tanimoto},{is_sub},{mces},\"{row1['INCHI']}\",\"{row2['INCHI']}\"\n")
                     # print("here")
                 except Exception as e:
                     # print(e)
@@ -124,15 +126,15 @@ if __name__ == '__main__':
         os.makedirs(os.path.dirname(args.out_dir))
     
     if args.cached_dir is not None:
-        print("Checking cache...")
+        # print("Checking cache...")
         file_name = os.path.basename(args.out_dir)
-        print("file_name", file_name)
+        # print("file_name", file_name)
         cached_file = os.path.join(args.cached_dir, file_name)
-        print(cached_file)
+        # print(cached_file)
         if os.path.exists(cached_file):
-            print("Cache found!.")
+            # print("Cache found!.")
             # rewrite the file in the output directory
-            print(args.out_dir, "is being written.")
+            # print(args.out_dir, "is being written.")
             with open(cached_file, 'r') as f:
                 with open(args.out_dir, 'w') as f2:
                     f2.write(f.read())
