@@ -1,4 +1,6 @@
 *log*
 work/
 .nextflow/
-nf_output/
+nf_output*/
+temp*/
+nohup.out

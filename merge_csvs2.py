@@ -5,10 +5,10 @@ from tqdm import tqdm
 import pandas as pd
 
 # Set the directory containing your CSV files
-directory = '/home/user/LabData/Reza/data/Wout/res_fixed'
+directory = '/home/user/LabData/Reza/data/Wout/120924/nf_output/res'
 
 # Name of the output file
-output_file = '/home/user/LabData/Reza/data/Wout/combined2.csv'
+output_file = '/home/user/LabData/Reza/data/Wout/120924/nf_output/combined2.csv'
 
 # Get a list of all CSV files in the directory
 all_files = glob.glob(os.path.join(directory, "*.csv"))
@@ -18,7 +18,7 @@ first_file = all_files[0]
 
 
 # Write the header to the output file
-columns = ["smiles1","smiles2","distance","tanimoto","is_sub","inchi1","inchi2"]
+columns = ["inchi1","inchi2","distance","tanimoto","is_sub","added","removed","mces","motif_distance","motif_removed","motif_added"]
 df = pd.DataFrame(columns=columns)
 df.to_csv(output_file, index=False)
 

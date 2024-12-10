@@ -27,4 +27,3 @@ dependencies:
     - Jinja2==3.1.3
     - IPython
     - myopic-mces
-    - git+https://github.com/mshahneh/SmallMol_Mod_Site_Localization
