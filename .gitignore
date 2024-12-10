@@ -4,3 +4,4 @@ work/
 nf_output*/
 temp*/
 nohup.out
+__pycache__/
