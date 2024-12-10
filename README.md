@@ -2,21 +2,29 @@
 To run the code, make sure you have nextflow installed. we tested nextflow on version `24.04.4`.
 
 ## Sanity Test Run
+To run the code on a small set and check that everything works:
+```
+make run_sample
+```
+this will create *nf_output_sample* folder with the result for the mols_small.csv.
 
+## Main run
+To run on the main data:
 ```
 make run
 ```
 
+
 ## How to Run the Code with custom options
 
-to run the code, you can use the following command:
+The main way to run the workflow is to run the following command:
 
 ```
 nextflow run ./main.nf
 ```
+If you need to calculate more variations like the MCES or motif based, you can use argument options.
 
 ## Options
-
 You can customize the run by adding options. Here are some common options:
 - `-resume`: To resume a job.
 - `-c <config file>`: To pass a config file.
