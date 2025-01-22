@@ -36,6 +36,9 @@ def bfs(all_motif_matches, final, top_limit=None):
     forward_dp = dict()
     forward_par = dict()
     
+    if final in all_motif_matches:
+        return 1, {atom: 0 for atom in all_motif_matches[final][0]}
+    
     for motif_cover in all_motif_matches:
         move_back = final - motif_cover
         forward_dp[move_back] = 1
