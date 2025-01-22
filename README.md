@@ -39,7 +39,7 @@ You can customize the run by adding options. Here are some common options:
 
 Example:
 ```
-nextflow run ./main.nf -resume -c nextflow.config --output_dir nf_output_test --calculate_mces 1 --calculate_motif_based 1 --mols_csv 'data/mols.csv' --motifs_csv 'data/motifs.csv'
+nextflow run ./main.nf -resume -c nextflow.config --batch_x 10 --batch_y 10 \ --output_dir nf_output_test --calculate_mces 1 --calculate_motif_based 1 --mols_csv 'data/mols.csv' --motifs_csv 'data/motifs.csv'
 ```
 
 ## File Descriptions
