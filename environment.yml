@@ -1,4 +1,4 @@
-name: wout_data_analysis
+name: edit_distance_workflow
 
 channels:
   - bioconda
@@ -14,7 +14,6 @@ dependencies:
   - pip=23.1.2
   - pillow=9.4.0
   - pandas=1.5.3
-  - ipykernel=6.21.3
   - pip:
     - cairosvg==2.7.0
     - tqdm==4.65.0

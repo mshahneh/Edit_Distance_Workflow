@@ -78,7 +78,7 @@ def solve_pair(smiles1, smiles2, motifs_dict, top_limit=None, important_columns=
     res['added'] = dist1
     res['removed'] = dist2
     
-    if 'mces' in important_columns:
+    if important_columns is not None and 'mces' in important_columns:
         if not isinstance(smiles1, str):
             smiles1 = Chem.MolToSmiles(mol1)
         if not isinstance(smiles2, str):
@@ -86,7 +86,7 @@ def solve_pair(smiles1, smiles2, motifs_dict, top_limit=None, important_columns=
         mces_value = MCES(smiles1, smiles2, threshold=upper_limit_edit_distance)
         res['mces'] = round(mces_value[1], 2)
     
-    if "motif_distance" in important_columns:
+    if important_columns is not None and "motif_distance" in important_columns:
         # print("going to calculate motif edit distance")
         if distance >= upper_limit_edit_distance:
             motif_removed = dist2

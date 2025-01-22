@@ -234,6 +234,7 @@ def get_modification_graph(main_struct, sub_struct):
                 1. the modified subgraph molecule (as an rdkit editable molecule)
                 2. a dictionary that maps the wildcard atom indices in subgraph to its true index in the main molecule
                 3. the SMARTS representation of the modification
+                4. A dictionary that maps all the atoms in the modification to their original atom index in the main molecule
     """
     main_struct, sub_struct = _get_molecules(main_struct, sub_struct)
     if not main_struct.HasSubstructMatch(sub_struct):
@@ -274,12 +275,15 @@ def get_modification_graph(main_struct, sub_struct):
     all_modifications = []
     for modification in range(color):
         true_map = dict()
+        complete_map = dict()
         edit_mol = Chem.RWMol(main_struct)
         # delete any atom that is not in the modification
         for atom in range(main_struct.GetNumAtoms()-1, -1, -1):
             if atom not in visited or visited[atom] != modification:
                 edit_mol.RemoveAtom(atom)
             elif atom in atoms_of_substructure:
+                edit_mol.GetAtomWithIdx(atom).SetProp('atomNote', f'wildcard_{atom}')
+            else:
                 edit_mol.GetAtomWithIdx(atom).SetProp('atomNote', f'substructure_{atom}')
         
         new_edit_mol = Chem.RWMol()
@@ -288,17 +292,23 @@ def get_modification_graph(main_struct, sub_struct):
                 note = atom.GetProp('atomNote')
             except:
                 note = None
-            if note is not None and note.startswith('substructure'):
-                new_edit_mol.AddAtom(Chem.Atom(0))
-                true_map[atom.GetIdx()] = note.split('_')[1]
+            if note is not None:
+                if note.startswith('wildcard_'):
+                    new_edit_mol.AddAtom(Chem.Atom(0))
+                    true_map[atom.GetIdx()] = int(note.split('_')[1])
+                    complete_map[atom.GetIdx()] = int(note.split('_')[1])
+                else:
+                    new_edit_mol.AddAtom(atom)
+                    complete_map[atom.GetIdx()] = int(note.split('_')[1])
             else:
                 new_edit_mol.AddAtom(atom)
+
         
         for bond in edit_mol.GetBonds():
             new_edit_mol.AddBond(bond.GetBeginAtomIdx(), bond.GetEndAtomIdx(), bond.GetBondType())
             
         # new_edit_mol = new_edit_mol.GetMol()
-        all_modifications.append((new_edit_mol, true_map, Chem.MolToSmarts(new_edit_mol)))
+        all_modifications.append((new_edit_mol, true_map, Chem.MolToSmarts(new_edit_mol), complete_map))
         
     return all_modifications
 
