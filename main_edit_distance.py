@@ -13,7 +13,7 @@ from myopic_mces import MCES
 from motif_base_edit_distance import get_min_motif_to_cover
 import pickle
 
-atom_num_threshold = 55
+atom_num_threshold = 45
 upper_limit_edit_distance = 10
 
 
